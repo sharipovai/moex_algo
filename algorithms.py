@@ -83,6 +83,4 @@ def get_prediction(trade_code):
     short_predict = line_sin_predict(10, x, y, curve_type='line')
     middle_predict = line_sin_predict(20, x, y, curve_type='sin')
     long_predict = line_sin_predict(0, x, y, curve_type='line')
-    print(short_predict, middle_predict, long_predict)
-
     return short_predict, middle_predict, long_predict
