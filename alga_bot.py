@@ -7,12 +7,22 @@ from algorithms import get_prediction
 
 bot = telebot.TeleBot('6986377523:AAFIcc-iDKEnE6S-r0lP-XQSvHkCXuBOjvQ')
 
-mode_type=0
+mode_type = 0
 company_data = []
 
 
 @bot.message_handler(commands=["start"])
 def start(message):
+    bot.send_message(message.chat.id, f"Привет, {message.from_user.first_name}!\n")
+    bot.send_message(message.chat.id,
+                     f"Существует три основных вида торговли на бирже в зависимости от времени, которое проходит между покупкой и продажей ценных бумаг:\n"
+                     f"1) краткосрочная - покупка-продажа в течении дня (скальпинг)\n"
+                     f"2) среднесрочная - покупка-продажа в течении 1-2 месяцев\n"
+                     f"3) долгосрочная - покупка-продажа более года.")
+    buttons(message)
+
+
+def buttons(message):
     markup = types.ReplyKeyboardMarkup()
     but1 = types.KeyboardButton("Краткосрочный")
     but2 = types.KeyboardButton("Среднесрочный")
@@ -20,15 +30,9 @@ def start(message):
     markup.add(but1)
     markup.add(but2)
     markup.add(but3)
-    hello_mess = f"Привет, {message.from_user.first_name}!\n"
-    bot.send_message(message.chat.id, hello_mess, parse_mode='html', reply_markup=markup)
-    bot.send_message(message.chat.id,
-                     f"Существует три основных вида торговли на бирже в зависимости от времени, которое проходит между покупкой и продажей ценных бумаг:\n"
-                     f"1) краткосрочная - покупка-продажа в течении дня (скальпинг)\n"
-                     f"2) среднесрочная - покупка-продажа в течении 1-2 месяцев\n"
-                     f"3) долгосрочная - покупка-продажа более года\n"
-                     f"Какой из вариантов подходит именно Вам?")
+    bot.send_message(message.chat.id, "Выберите предпочитаемый вид торговли на бирже.")
     bot.register_next_step_handler(message, on_click)
+
 
 @bot.message_handler(commands=["Краткосрочный", "Среднесрочный", "Долгосрочный"])
 def on_click(message):
@@ -57,7 +61,7 @@ def get_company_for_trade(message):
             bot.send_message(message.chat.id, f"Было выбрано: {company_data} \n")
             bot.send_message(message.chat.id, "Провожу анализ ценных бумаг...")
             get_predict(message, company_data[0])
-            bot.register_next_step_handler(message, start)
+            buttons(message)
         else:
             bot.send_message(message.chat.id,
                              f"Тикет/компания {message.text.strip()} пока недоступа. Попробуйте ввести название на другом языке."
