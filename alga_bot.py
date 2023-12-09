@@ -14,9 +14,9 @@ company_data = []
 @bot.message_handler(commands=["start"])
 def start(message):
     markup = types.ReplyKeyboardMarkup()
-    but1 = types.KeyboardButton("1 - краткосрочный")
-    but2 = types.KeyboardButton("2 - среднесрочный")
-    but3 = types.KeyboardButton("3 - долгосрочный")
+    but1 = types.KeyboardButton("Краткосрочный")
+    but2 = types.KeyboardButton("Среднесрочный")
+    but3 = types.KeyboardButton("Долгосрочный")
     markup.add(but1)
     markup.add(but2)
     markup.add(but3)
@@ -29,31 +29,32 @@ def start(message):
                          f"2) среднесрочный - покупка-продажа в течении 1-2 месяцев;\n"
                          f"3) долгосрочный - покупка-продажа в течение срока, превышающего 1 год")
         bot.send_message(message.chat.id,
-                         "Выберите, пожалуйста, вид торговли, который вас интересует, введя соответствующий порядковый номер")
+                         "Выберите, пожалуйста, вид торговли, который вас интересует")
     else:
         bot.send_message(message.chat.id,
                          "Если вы хотите получить информацию о ценных бумагах другой компании, то, пожалуйста, выберите вид торговли, "
-                         "который вас интересует, введя соответствующий порядковый номер")
+                         "который вас интересует", reply_markup=markup)
     bot.register_next_step_handler(message, on_click)
 
 
 @bot.message_handler(commands=["text"])
 def on_click(message):
-    mode = {'1 - краткосрочный': 0,
-            '2 - среднесрочный': 1,
-            '3 - долгосрочный': 2,
+    markup = types.ReplyKeyboardRemove()
+    mode = {'Краткосрочный': 0,
+            'Среднесрочный': 1,
+            'Долгосрочный': 2,
             '1': 0,
             '2': 1,
             '3': 2}
     if message.text.strip() in mode.keys():
         bot.send_message(message.chat.id, "Отлично! Теперь введите тикер (например, SBER, LKOH, GAZP) или название компании (например, Сбербанк, Лукойл, Газпром), "
-                                          "о ценных бумагах которой вы хотите получить информацию ", parse_mode='html')
+                                          "о ценных бумагах которой вы хотите получить информацию ", parse_mode='html', reply_markup=markup)
         global mode_type
         mode_type = mode[message.text.strip()]
         bot.register_next_step_handler(message, get_company_for_trade)
     else:
         bot.send_message(message.chat.id,
-                         f"Пожалуйста, введите 1, 2 или 3")
+                         f"Пожалуйста, выберите вид торговли, который вас интересует, или просто введите 1, 2 или 3")
         bot.register_next_step_handler(message, on_click)
 
 
