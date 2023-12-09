@@ -1,9 +1,13 @@
 import json
 import requests
 import pandas as pd
-import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
 from scipy.optimize import curve_fit
+
+matplotlib.use('Agg')
+
+from matplotlib import pyplot as plt
 
 def sin_func(x, a, b):
     d = 0.000000001
@@ -42,16 +46,18 @@ def get_data(trade_code):
     return data_shares
 
 
-def show_plot(x1, y1, label_1, x2, y2, label_2):
-    fig, axs = plt.subplots(1, 1, figsize=(5, 4))
+def show_plot(x1, y1, label_1, x2, y2, label_2, id):
+    fig = plt.Figure(figsize=(5, 4))
     plt.plot(x1, y1, label=label_1)
     plt.plot(x2, y2, label=label_2)
     plt.legend()
     plt.xlabel('Date')
-    plt.ylabel('Open');
+    plt.ylabel('Open')
+    plt.savefig('images/'+str(id)+'.jpg')
+    plt.close()
 
 
-def line_sin_predict(size, x, y, curve_type='line'):
+def line_sin_predict(size, x, y, curve_type='line', mes_id='001'):
     # return 1 if func is increasing and 0 if func is decreasing
     x_sized = x[-size:]
     y_sized = y[-size:]
@@ -61,17 +67,17 @@ def line_sin_predict(size, x, y, curve_type='line'):
     else:
         params, cov = curve_fit(sin_func, x_sized, y_sized)
         y_predict = [sin_func(x_sized[i], *params) for i in range(len(x_sized))]
-    # show_plot(x_sized, y_sized, 'origin', x_sized, y_predict, 'predict')
+    show_plot(x_sized, y_sized, 'origin', x_sized, y_predict, 'predict', mes_id)
     if y_predict[-1] > y_predict[-2]:
         return 1
     else:
         return 0
 
 
-def get_prediction(trade_code):
+def get_prediction(trade_code, mode_type, mes_id):
     data_shares = get_data(trade_code)
     if len(data_shares) == 0:
-        return 2, 2, 2
+        return 2
     time_and_open_df = data_shares[['TRADEDATE', 'OPEN']]
     time_and_open_df = time_and_open_df.dropna()
     time_and_open_df['TRADEDATE'] = time_and_open_df['TRADEDATE'].astype("datetime64[ns]")
@@ -79,8 +85,14 @@ def get_prediction(trade_code):
 
     x = time_and_open_df['TRADEDATE'].to_list()
     y = time_and_open_df['OPEN'].to_list()
-
-    short_predict = line_sin_predict(10, x, y, curve_type='line')
-    middle_predict = line_sin_predict(20, x, y, curve_type='sin')
-    long_predict = line_sin_predict(0, x, y, curve_type='line')
-    return short_predict, middle_predict, long_predict
+    if mode_type == 0:
+        num = 10
+        curve_type = 'line'
+    elif mode_type == 1:
+        num = 20
+        curve_type = 'sin'
+    else:
+        num = 0
+        curve_type = 'line'
+    predict = line_sin_predict(num, x, y, curve_type=curve_type, mes_id=mes_id)
+    return predict
