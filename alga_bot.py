@@ -13,42 +13,47 @@ company_data = []
 
 @bot.message_handler(commands=["start"])
 def start(message):
-    bot.send_message(message.chat.id, f"Привет, {message.from_user.first_name}!\n")
-    bot.send_message(message.chat.id,
-                     f"Существует три основных вида торговли на бирже в зависимости от времени, которое проходит между покупкой и продажей ценных бумаг:\n"
-                     f"1) краткосрочная - покупка-продажа в течении дня (скальпинг)\n"
-                     f"2) среднесрочная - покупка-продажа в течении 1-2 месяцев\n"
-                     f"3) долгосрочная - покупка-продажа более года.")
-    buttons(message)
-
-
-def buttons(message):
     markup = types.ReplyKeyboardMarkup()
-    but1 = types.KeyboardButton("Краткосрочный")
-    but2 = types.KeyboardButton("Среднесрочный")
-    but3 = types.KeyboardButton("Долгосрочный")
+    but1 = types.KeyboardButton("1 - краткосрочный")
+    but2 = types.KeyboardButton("2 - среднесрочный")
+    but3 = types.KeyboardButton("3 - долгосрочный")
     markup.add(but1)
     markup.add(but2)
     markup.add(but3)
-    bot.send_message(message.chat.id, "Выберите предпочитаемый вид торговли на бирже.")
+    global company_data
+    if not company_data:
+        bot.send_message(message.chat.id, f"Здравствуйте, {message.from_user.first_name}!\n", reply_markup=markup)
+        bot.send_message(message.chat.id,
+                         f"Существует три основных вида торговли на бирже в зависимости от времени, которое проходит между покупкой и продажей ценных бумаг:\n"
+                         f"1) краткосрочный - покупка-продажа в течении дня (скальпинг);\n"
+                         f"2) среднесрочный - покупка-продажа в течении 1-2 месяцев;\n"
+                         f"3) долгосрочный - покупка-продажа в течение срока, превышающего 1 год")
+        bot.send_message(message.chat.id,
+                         "Выберите, пожалуйста, вид торговли, который вас интересует, введя соответствующий порядковый номер")
+    else:
+        bot.send_message(message.chat.id,
+                         "Если вы хотите получить информацию о ценных бумагах другой компании, то, пожалуйста, выберите вид торговли, "
+                         "который вас интересует, введя соответствующий порядковый номер")
     bot.register_next_step_handler(message, on_click)
 
 
-@bot.message_handler(commands=["Краткосрочный", "Среднесрочный", "Долгосрочный"])
+@bot.message_handler(commands=["text"])
 def on_click(message):
-    mode = {'Краткосрочный': 0,
-            'Среднесрочный': 1,
-            'Долгосрочный': 2}
-    if message.text in mode.keys():
-        bot.send_message(message.chat.id, "Отлично! Теперь введите тикер, или название компании, для которой Вы хотите получить информацию. "
-                                          "Например: SBER (Сбербанк), LKOH (Лукойл), GAZP (Газпром)...",
-                         parse_mode='html')
+    mode = {'1 - краткосрочный': 0,
+            '2 - среднесрочный': 1,
+            '3 - долгосрочный': 2,
+            '1': 0,
+            '2': 1,
+            '3': 2}
+    if message.text.strip() in mode.keys():
+        bot.send_message(message.chat.id, "Отлично! Теперь введите тикер (например, SBER, LKOH, GAZP) или название компании (например, Сбербанк, Лукойл, Газпром), "
+                                          "о ценных бумагах которой вы хотите получить информацию ", parse_mode='html')
         global mode_type
-        mode_type = mode[message.text]
+        mode_type = mode[message.text.strip()]
         bot.register_next_step_handler(message, get_company_for_trade)
     else:
         bot.send_message(message.chat.id,
-                         f"Нужно выбрать один из трех режимов, попробуйте еще раз.")
+                         f"Пожалуйста, введите 1, 2 или 3")
         bot.register_next_step_handler(message, on_click)
 
 
@@ -61,11 +66,10 @@ def get_company_for_trade(message):
             bot.send_message(message.chat.id, f"Было выбрано: {company_data} \n")
             bot.send_message(message.chat.id, "Провожу анализ ценных бумаг...")
             get_predict(message, company_data[0])
-            buttons(message)
+            start(message)
         else:
             bot.send_message(message.chat.id,
-                             f"Тикет/компания {message.text.strip()} пока недоступа. Попробуйте ввести название на другом языке."
-                             f"Например: SBER (Сбербанк), LKOH (Лукойл), GAZP (Газпром)...")
+                             f"На бирже не найдена информация по тикеру или компании '{message.text.strip()}'. Пожалуйста, введите другой тикер или название компании")
             bot.register_next_step_handler(message, get_company_for_trade)
 
 def get_company_or_tiket_data(search_text):
@@ -98,13 +102,13 @@ def get_predict(message, trade_code):
     mode_list = ['краткосрочной', 'среднесрочной', 'долгосрочной']
     if predict == 0:
         bot.send_message(message.chat.id,
-                         f"У компании {trade_code} в {mode_list[mode_type]} перспективе ценные бумаги сейчас дешевеют, предлагаю тебе продавать их активы.")
+                         f"В {mode_list[mode_type]} перспективе ценные бумаги {trade_code} дешевеют, предлагаю вам продавать их активы")
     elif predict == 1:
         bot.send_message(message.chat.id,
-                         f"У компании {trade_code} в {mode_list[mode_type]} перспективе ценные бумаги сейчас дорожают, предлагаю тебе покупать их активы.")
+                         f"В {mode_list[mode_type]} перспективе ценные бумаги {trade_code} дорожают, предлагаю вам покупать их активы")
     else:
         bot.send_message(message.chat.id,
-                         f"При оценке компании {trade_code} в {mode_list[mode_type]} перспективе возникла ошибка, попробуй выбрать другую компанию.")
+                         f"При оценке ценных бумаг {trade_code} в {mode_list[mode_type]} перспективе возникла ошибка.")
 
 
 bot.polling(none_stop=True)
