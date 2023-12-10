@@ -53,10 +53,13 @@ def on_click(message):
         global mode_type
         mode_type = mode[message.text.strip()]
         bot.register_next_step_handler(message, get_company_for_trade)
-    else:
+    elif message.text != '/start':
         bot.send_message(message.chat.id,
                          f"Пожалуйста, выберите вид торговли, который вас интересует, или просто введите 1, 2 или 3")
         bot.register_next_step_handler(message, on_click)
+    else:
+        bot.register_next_step_handler(message, start)
+
 
 
 @bot.message_handler(content_types=["text"])
