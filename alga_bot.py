@@ -21,7 +21,7 @@ def start(message):
     markup.add(but2)
     markup.add(but3)
     global company_data
-    if not company_data:
+    if message.text == '/start':
         bot.send_message(message.chat.id, f"Здравствуйте, {message.from_user.first_name}!\n", reply_markup=markup)
         bot.send_message(message.chat.id,
                          f"Существует три основных вида торговли на бирже в зависимости от времени, которое проходит между покупкой и продажей ценных бумаг:\n"
@@ -35,6 +35,7 @@ def start(message):
                          "Если вы хотите получить информацию о ценных бумагах другой компании, то, пожалуйста, выберите вид торговли, "
                          "который вас интересует", reply_markup=markup)
     bot.register_next_step_handler(message, on_click)
+
 
 
 @bot.message_handler(commands=["text"])
